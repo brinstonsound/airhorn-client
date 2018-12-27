@@ -13,12 +13,11 @@
       <el-container>
         <el-aside width="200px">
           <el-menu
-            default-active="operations"
             class="el-menu-vertical-demo"
-            router="true"
+            router
             background-color="#ffffff"
             text-color="#1d35b9"
-            active-text-color=""
+            active-text-color
           >
             <el-menu-item index="operations">
               <i class="el-icon-menu"></i>
@@ -48,7 +47,7 @@
 
 <style>
 #app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;

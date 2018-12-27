@@ -1,8 +1,8 @@
 
 <script>
 export default {
-  name: "operations"
-};
+  name: 'operations',
+}
 </script>
 
 <template>
