@@ -13,33 +13,26 @@ export default {
       errors: [],
       lstCategories: [],
       lstSounds: [],
-      form: {
-        soundCategory: 0,
-      },
+      activeCategory: 0,
     }
   },
+  watch: {
+    activeCategory: function() {
+      this.selectCategory(this.activeCategory)
+    },
+  },
   methods: {
-    async selectCategory() {
-      // Fires when the selected category changes.  New category Id is in form.soundCategory
-
+    async selectCategory(categoryId) {
       // Load all sounds from the selected category
       try {
         let response = {}
-        if(this.form.soundCategory === 0){
-          // Load All sounds
-                  response = await axios.get(
-          `${settings.orchestrationAPI}/sounds`)
-        } else {
         response = await axios.get(
-          `${settings.orchestrationAPI}/soundCategories/${
-            this.form.soundCategory
-          }/sounds`
+          `${settings.orchestrationAPI}/soundCategories/${categoryId}/sounds`
         )
-        }
         this.lstSounds = response.data
         this.lstSounds.sort((a, b) =>
-        a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-      )
+          a.name > b.name ? 1 : b.name > a.name ? -1 : 0
+        )
       } catch (e) {
         this.errors.push(e)
       }
@@ -53,13 +46,10 @@ export default {
       )
       this.lstCategories = response.data
       //this.lstCategories.push({ id: -1, name: '...Select' })
-      this.lstCategories.push({ id: 0, name: '..All Categories' })
+      //this.lstCategories.push({ id: 0, name: '..All Categories' })
       this.lstCategories.sort((a, b) =>
         a.name > b.name ? 1 : b.name > a.name ? -1 : 0
       )
-      // Load the sounds without filter
-      this.selectCategory()
-
     } catch (e) {
       alert(e)
     }
@@ -70,35 +60,90 @@ export default {
 <template>
   <div>
     <h1>Sound Library</h1>
-
-    <div style="margin-bottom: 8px">
-      <div>
-        <el-form ref="form" :model="form" label-width="120px">
-          <el-select v-model="form.soundCategory" @change="selectCategory">
-            <el-option
-              v-for="item in lstCategories"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
-            ></el-option>
-          </el-select>
-        </el-form>
-      </div>
+    <div id="toolbar" class="flex-container">
+      <div class="flex-item"><el-button type="primary" size="small">Search&nbsp;<i class="el-icon-search el-icon-right"></i></el-button></div>&nbsp;&nbsp;
+      <div class="flex-item"><el-button type="primary" size="small">Upload&nbsp;<i class="el-icon-upload el-icon-right"></i></el-button></div>
     </div>
-    <div class="container">
-      <div v-for="sound in lstSounds" :key="sound.id">
-        <Sound v-bind:soundId="sound.id" class="sound-card"/>
-      </div>
+
+    <div>
+      <el-collapse v-model="activeCategory" accordion>
+        <el-collapse-item
+          v-for="category in lstCategories"
+          v-bind:key="category.id"
+          :name="category.id"
+          style="margin-top:10px"
+        >
+          <template slot="title">
+            <div class="categoryHeader">
+              <span class="categoryTitle">{{category.name}}</span>
+              <!-- <i class="header-icon el-icon-info"></i> -->
+            </div>
+          </template>
+          <div class="container">
+            <div v-for="sound in lstSounds" :key="sound.id">
+              <Sound v-bind:soundId="sound.id" class="sound-card"/>
+            </div>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
     </div>
   </div>
 </template>
 
 <style scoped>
+.flex-container {
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: row;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -webkit-flex-wrap: nowrap;
+    -ms-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+    -webkit-justify-content: flex-end;
+    -ms-flex-pack: end;
+    justify-content: flex-end;
+    -webkit-align-content: center;
+    -ms-flex-line-pack: center;
+    align-content: center;
+    -webkit-align-items: flex-start;
+    -ms-flex-align: start;
+    align-items: flex-start;
+    }
+
+.flex-item {
+    -webkit-order: 0;
+    -ms-flex-order: 0;
+    order: 0;
+    -webkit-flex: 0 1 auto;
+    -ms-flex: 0 1 auto;
+    flex: 0 1 auto;
+    -webkit-align-self: auto;
+    -ms-flex-item-align: auto;
+    align-self: auto;
+    }
+
+.toolbarItem {
+  flex: 1;
+  margin-right: 10px;
+}
+.categoryHeader {
+  background-color: cornflowerblue;
+  border-radius: 5px;
+  width: 100%;
+}
+.categoryTitle {
+  font-size: 1.25em;
+  font-weight: 700;
+  margin-left: 10px;
+}
 .container {
   display: flex; /* or inline-flex */
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
+  margin-top: 10px;
 }
 .sound-card {
   margin-bottom: 5px;
