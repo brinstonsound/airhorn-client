@@ -19,6 +19,7 @@ export default {
         name: '',
         description: '',
         categories: [],
+        file: '',
       },
     }
   },
@@ -29,6 +30,8 @@ export default {
   },
   methods: {
     async selectCategory(categoryId) {
+      if(categoryId == '') return
+
       // Load all sounds from the selected category
       try {
         let response = {}
@@ -43,9 +46,65 @@ export default {
         this.errors.push(e)
       }
     },
+    handleFileUpload() {
+      this.uploadForm.file = this.$refs.file.files[0]
+    },
     submitUpload() {
-      this.$refs.upload.action = `${settings.orchestrationAPI}\\sounds`
-      this.$refs.upload.submit()
+      // Check for any manually entered sound categories
+      try {
+        this.uploadForm.categories.forEach(category => {
+          let cat = this.lstCategories.find(obj => {
+            return obj.id == category
+          })
+          if (cat == undefined) {
+            // I think we need to create a new sound category using cat as the name
+            axios
+              .post(
+                `${settings.orchestrationAPI}/soundCategories`,
+                { name: category, parentId: 0 },
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                }
+              )
+              .then(function() {
+                console.log('Created new sound category')
+                // Replace the sound category name we had with the id
+                let idx = this.uploadForm.categories.findIndex(cat2 => {
+                  return cat2 == category
+                })
+                this.uploadForm.categories[idx] = cat
+              })
+              .catch(function(err) {
+                console.log(`Error creating sound category: ${err.message}`)
+              })
+          }
+        })
+
+        let formData = new FormData()
+        formData.append('file', this.uploadForm.file)
+        formData.append('name', this.uploadForm.name)
+        formData.append('description', this.uploadForm.description)
+        formData.append('soundCategories', this.uploadForm.categories)
+        console.log(JSON.stringify(formData))
+        axios
+          .post(`${settings.orchestrationAPI}/sounds`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+          .then(function() {
+            console.log('SUCCESS!!')
+          })
+          .catch(function(err) {
+            console.log(`FAILURE!! ${err.message}`)
+          })
+        this.dialogVisible = false
+      } catch (err) {
+        alert(err.message)
+        console.log(err.message)
+      }
     },
   },
   async mounted() {
@@ -108,17 +167,32 @@ export default {
       </el-collapse>
     </div>
     <el-dialog title="Upload a New Sound" :visible.sync="dialogVisible" width="40%">
-      <span>You can upload your own sound files to Airhorn. Sounds must be PCM Waveform files (.wav)</span>
+      <span>You can upload your own sound files to Airhorn. Sounds must be Waveform Audio File Format (.wav) files.</span>
       <br>
-      <el-form :model="uploadForm" label-width="80px">
-        <el-form-item label="Title:">
-          <el-input type="text" :model="uploadForm.name" placeholder="The title of your sound."></el-input>
-        </el-form-item>
-        <el-form-item label="Description:">
-          <el-input type="text" :model="uploadForm.description" placeholder="A short description"></el-input>
-        </el-form-item>
-        <el-form-item label="Categories:">
-          <el-select v-model="uploadForm.categories" multiple placeholder="Select">
+      <div class="upload-form-container">
+        <div class="flex-item form-label">Title:</div>
+        <div class="flex-item form-field">
+          <input type="text" v-model="uploadForm.name" class="form-field">
+        </div>
+      </div>
+      <div class="upload-form-container">
+        <div class="flex-item form-label">Description:</div>
+        <div class="flex-item form-field">
+          <input type="text" v-model="uploadForm.description" class="form-field">
+        </div>
+      </div>
+      <div class="upload-form-container">
+        <div class="flex-item form-label">Categories:</div>
+        <div class="flex-item form-field">
+          <el-select
+            v-model="uploadForm.categories"
+            multiple
+            filterable
+            allow-create
+            default-first-option
+            placeholder="Select or enter sound categories"
+            class="form-field"
+          >
             <el-option
               v-for="category in lstCategories"
               :key="category.id"
@@ -126,19 +200,21 @@ export default {
               :value="category.id"
             ></el-option>
           </el-select>
-        </el-form-item>
-
-        <el-upload ref="upload" action :auto-upload="false" accept=".wav">
-          <el-button slot="trigger" size="small" type="primary">select file</el-button>
-        </el-upload>
-      </el-form>
+        </div>
+      </div>
+      <div class="upload-form-container">
+        <div class="flex-item form-label">Audio File:</div>
+        <div class="flex-item form-field">
+          <input type="file" id="file" ref="file" accept=".wav" @change="handleFileUpload()" class="form-field">
+        </div>
+      </div>
       <span slot="footer" class="dialog-footer">
         <el-button size="small" @click="dialogVisible = false">Cancel</el-button>
         <el-button
           style="margin-left: 10px;"
           size="small"
           type="success"
-          @click="submitUpload"
+          @click="submitUpload()"
         >Upload to Airhorn Unit</el-button>
       </span>
     </el-dialog>
@@ -167,6 +243,28 @@ export default {
   align-items: flex-start;
 }
 
+.upload-form-container {
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  -webkit-justify-content: flex-start;
+  -ms-flex-pack: end;
+  justify-content: flex-start;
+  -webkit-align-content: center;
+  -ms-flex-line-pack: center;
+  align-content: center;
+  -webkit-align-items: flex-start;
+  -ms-flex-align: start;
+  align-items: flex-start;
+  margin: 10px;
+}
+
 .flex-item {
   -webkit-order: 0;
   -ms-flex-order: 0;
@@ -177,6 +275,14 @@ export default {
   -webkit-align-self: auto;
   -ms-flex-item-align: auto;
   align-self: auto;
+}
+
+.form-label {
+  width: 100px;
+}
+
+.form-field {
+  width: 85%;
 }
 
 .toolbarItem {
@@ -197,10 +303,11 @@ export default {
   display: flex; /* or inline-flex */
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin-top: 10px;
 }
 .sound-card {
   margin-bottom: 5px;
+  margin-right: 10px;
 }
 </style>

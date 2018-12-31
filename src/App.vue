@@ -20,11 +20,11 @@
             active-text-color
           >
             <el-menu-item index="operations">
-              <i class="el-icon-menu"></i>
+              <i class="el-icon-service"></i>
               <span>Operations Console</span>
             </el-menu-item>
             <el-menu-item index="environments">
-              <i class="el-icon-menu"></i>
+              <i class="el-icon-picture"></i>
               <span>Environments</span>
             </el-menu-item>
             <el-menu-item index="library">

@@ -39,6 +39,12 @@ export default new Router({
       name: "library",
       component: () =>
         import(/* webpackChunkName: "library" */ "./views/SoundLibrary.vue")
+    },
+    {
+      path: "/settings",
+      name: "settings",
+      component: () =>
+        import(/* webpackChunkName: "library" */ "./views/Settings.vue")
     }
   ]
 });
