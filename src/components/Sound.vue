@@ -18,14 +18,39 @@ export default {
     }
   },
   methods: {
-    playSound(soundId) {
-      this.$message.info(`Playing sound ${soundId}`)
+    playSound() {
+      this.$message.error('Not implemented yet')
     },
     editSound() {
       this.editDialogVisible = true
     },
     saveChanges() {
-      this.$message.error('Not implemented yet')
+      if (this.sound.name == undefined || this.sound.name == '') {
+        this.$message.error('Please give your sound a title.')
+        return
+      }
+      if (this.sound.description == undefined || this.sound.description == '') {
+        this.$message.error('Please give your sound a description.')
+        return
+      }
+      if (
+        this.sound.soundCategories == undefined ||
+        this.sound.soundCategories.length == 0
+      ) {
+        this.$message.error(
+          'Please select at least one category for your sound.'
+        )
+        return
+      }
+      axios
+        .put(`${settings.orchestrationAPI}/sounds/${this.sound.id}`, this.sound)
+        .then(function() {
+          this.$message.success('SUCCESS!! Sound updated.')
+        })
+        .catch(function(err) {
+          this.$message.error(`Error updating sound!! ${err.message}`)
+        })
+      this.$emit('deleted', this.sound.id) // It's not really deleted, but the parent needs to refresh anyway.
       this.editDialogVisible = false
     },
     async deleteSound() {
@@ -39,7 +64,6 @@ export default {
         this.editDialogVisible = false
         // Notify the sound library to reload (this will remove the sound from the visible library)
         this.$emit('deleted', this.sound.id)
-
       } catch (e) {
         this.$message.error(`Error deleting sound: ${e.message}`)
       }
@@ -48,6 +72,18 @@ export default {
     },
   },
   async created() {
+    try {
+      const response = await axios.get(
+        `${settings.orchestrationAPI}/soundCategories`
+      )
+      this.lstCategories = response.data
+      this.lstCategories.sort((a, b) =>
+        a.name > b.name ? 1 : b.name > a.name ? -1 : 0
+      )
+    } catch (e) {
+      this.$message.error(`Error loading sound categories: ${e.message}`)
+    }
+
     // Load the selected sound object
     try {
       let response = await axios.get(
@@ -62,22 +98,6 @@ export default {
       })
     } catch (e) {
       this.$message.error(`Error loading sound: ${e.message}`)
-    }
-  },
-  async mounted() {
-    this.orchestrationAPI = settings.orchestrationAPI
-    try {
-      const response = await axios.get(
-        `${settings.orchestrationAPI}/soundCategories`
-      )
-      this.lstCategories = response.data
-      //this.lstCategories.push({ id: -1, name: '...Select' })
-      //this.lstCategories.push({ id: 0, name: '..All Categories' })
-      this.lstCategories.sort((a, b) =>
-        a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-      )
-    } catch (e) {
-      this.$message.error(`Error loading sound categories: ${e.message}`)
     }
   },
 }
@@ -131,10 +151,7 @@ export default {
           <el-select
             v-model="sound.soundCategories"
             multiple
-            filterable
-            allow-create
-            default-first-option
-            placeholder="Select or enter sound categories"
+            placeholder="Select sound categories"
             class="form-field"
           >
             <el-option
@@ -146,19 +163,6 @@ export default {
           </el-select>
         </div>
       </div>
-      <!-- <div class="edit-form-container">
-        <div class="flex-item form-label">Audio File:</div>
-        <div class="flex-item form-field">
-          <input
-            type="file"
-            id="file"
-            ref="file"
-            accept=".wav"
-            @change="handleFileUpload()"
-            class="form-field"
-          >
-        </div>
-      </div>-->
       <span slot="footer" class="dialog-footer">
         <el-button size="small" @click="editDialogVisible = false">Cancel</el-button>
         <el-button
@@ -187,21 +191,21 @@ export default {
 
 <style scoped>
 .card {
-  width: 350px;
+  width: 300px;
   border-style: solid;
   border-width: 2px;
   border-radius: 3px;
   border-color: cornflowerblue;
 }
 .card-header {
-  height: 34px;
+  height: 30px;
   background-color: cornflowerblue;
   padding-top: 4px;
   padding-left: 4px;
   padding-right: 4px;
 }
 .card-title {
-  font-size: 16px;
+  font-size: 1.1em;
   font-weight: 700;
 }
 .card-body {
