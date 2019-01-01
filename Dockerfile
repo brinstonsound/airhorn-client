@@ -2,8 +2,8 @@
 FROM node:11
 WORKDIR /app
 COPY package.json /app
-RUN npm install
 COPY ./public /app/public
 COPY ./src /app/src
+RUN npm install
 CMD node ./src/main.js
-EXPOSE 8080
+EXPOSE 8081

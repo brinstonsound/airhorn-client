@@ -1,3 +1,13 @@
+<script>
+import appFooter from './views/AppFooter'
+export default {
+  name: 'app',
+  components: {
+    appFooter
+    },
+}
+</script>
+
 <template>
   <div id="app">
     <!-- <div id="nav">
@@ -40,6 +50,9 @@
         <el-main>
           <router-view/>
         </el-main>
+      </el-container>
+      <el-container>
+        <appFooter></appFooter>
       </el-container>
     </el-container>
   </div>

@@ -1,5 +1,5 @@
 <script>
-const settings = require('@/appSettings')
+const settings = require('../appSettings')
 import axios from 'axios'
 export default {
   name: 'sound',
@@ -19,14 +19,13 @@ export default {
   },
   methods: {
     playSound(soundId) {
-      alert(`Playing sound ${soundId}`)
+      this.$message.info(`Playing sound ${soundId}`)
     },
     editSound() {
-      //alert(`Editing sound ${soundId}`)
       this.editDialogVisible = true
     },
     saveChanges() {
-      alert('Not implemented yet')
+      this.$message.error('Not implemented yet')
       this.editDialogVisible = false
     },
     async deleteSound() {
@@ -39,9 +38,10 @@ export default {
         // Close the edit dialog
         this.editDialogVisible = false
         // Notify the sound library to reload (this will remove the sound from the visible library)
+        this.$emit('deleted', this.sound.id)
 
       } catch (e) {
-        alert(e)
+        this.$message.error(`Error deleting sound: ${e.message}`)
       }
 
       this.checkDeleteDialogVisible = false
@@ -61,7 +61,7 @@ export default {
           .then(resp => (this.categoryNames += `[${resp.data.name}] `))
       })
     } catch (e) {
-      alert(e)
+      this.$message.error(`Error loading sound: ${e.message}`)
     }
   },
   async mounted() {
@@ -77,7 +77,7 @@ export default {
         a.name > b.name ? 1 : b.name > a.name ? -1 : 0
       )
     } catch (e) {
-      alert(e)
+      this.$message.error(`Error loading sound categories: ${e.message}`)
     }
   },
 }
