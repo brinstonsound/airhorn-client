@@ -45,6 +45,11 @@ export default new Router({
       name: "settings",
       component: () =>
         import(/* webpackChunkName: "library" */ "./views/Settings.vue")
-    }
-  ]
+    },
+    {
+      path: "/help",
+      name: "help",
+      component: () =>
+        import(/* webpackChunkName: "library" */ "./views/Help.vue")
+    },]
 });

@@ -45,6 +45,10 @@ export default {
               <i class="el-icon-setting"></i>
               <span>Settings</span>
             </el-menu-item>
+            <el-menu-item index="help">
+              <i class="el-icon-question"></i>
+              <span>Help</span>
+            </el-menu-item>
           </el-menu>
         </el-aside>
         <el-main>
@@ -61,6 +65,7 @@ export default {
 <style>
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-size: .9em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
