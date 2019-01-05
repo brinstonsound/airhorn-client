@@ -2,12 +2,14 @@
 const settings = require('../appSettings')
 import axios from 'axios'
 import Orchestration from '../components/Orchestration.vue'
+import Trigger from '../components/Trigger.vue'
 export default {
   name: 'environments',
-  components: { Orchestration },
+  components: { Orchestration, Trigger },
   data() {
     return {
       lstSymphonies: [],
+      lstTriggers: [],
       activeSymphony: {},
       newEnvironmentDialogVisible: false,
       symphonyForm: {
@@ -112,6 +114,20 @@ export default {
         this.$message.error(`Error loading environments list: ${error.message}`)
       }
     },
+    async loadTriggers() {
+      // Load the list of symphonies
+      try {
+        const response = await axios.get(
+          `${settings.orchestrationAPI}/triggers`
+        )
+        this.lstTriggers = response.data
+        this.lstTriggers.sort((a, b) =>
+          a.name > b.name ? 1 : b.name > a.name ? -1 : 0
+        )
+      } catch (error) {
+        this.$message.error(`Error loading triggers list: ${error.message}`)
+      }
+    },
     async getActiveSymphony() {
       // Get active symphony
       try {
@@ -131,6 +147,7 @@ export default {
   },
   async mounted() {
     this.loadSymphonies()
+    this.loadTriggers()
     this.getActiveSymphony()
   },
 }
@@ -174,9 +191,13 @@ export default {
       </div>
     </div>
     <h4>{{activeSymphony.name}}</h4>
-    <div id="symphony-components" class="flex-container">
-      <div id="triggers">Triggers</div>
-      <div id="orchestrations">Orchestrations
+    <div id="symphony-components-container">
+      <div id="triggers" class="flex-container">
+        <div class="form-container" v-for="trigger in lstTriggers" :key="trigger.id">
+          <Trigger :triggerId="trigger.id"></Trigger>
+        </div>
+      </div>
+      <div id="orchestrations" class="flex-container">
         <div
           class="form-container"
           v-for="orchestration in activeSymphony.orchestrations"
@@ -233,6 +254,11 @@ export default {
 </template>
 
 <style scoped>
+.component-title {
+  font-size: 1.1em;
+  font-weight: bolder;
+}
+
 .flex-container {
   display: -ms-flexbox;
   display: -webkit-flex;
@@ -242,9 +268,9 @@ export default {
   -ms-flex-direction: row;
   flex-direction: row;
 
-  -webkit-flex-wrap: nowrap;
-  -ms-flex-wrap: nowrap;
-  flex-wrap: nowrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
 
   -webkit-justify-content: flex-start;
   -ms-flex-pack: start;
@@ -282,5 +308,16 @@ export default {
 }
 .button {
   margin-left: 15px;
+}
+#symphony-components-container {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  align-items: start;
+}
+#triggers {
+  grid-column: 1;
+}
+#orchestrations {
+  grid-column: 2;
 }
 </style>
