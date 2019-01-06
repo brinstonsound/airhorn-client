@@ -2,10 +2,10 @@
 const settings = require('../appSettings')
 import axios from 'axios'
 import Orchestration from '../components/Orchestration.vue'
-import Trigger from '../components/Trigger.vue'
+//import Trigger from '../components/Trigger.vue'
 export default {
   name: 'environments',
-  components: { Orchestration, Trigger },
+  components: { Orchestration },
   data() {
     return {
       lstSymphonies: [],
@@ -17,6 +17,7 @@ export default {
         isActive: false,
       },
       checkDeleteDialogVisible: false,
+      orchEditDialogVisible: false,
     }
   },
   methods: {
@@ -144,6 +145,10 @@ export default {
         )
       }
     },
+    evtOrechestrationCreated() {
+      this.getActiveSymphony()
+      this.orchEditDialogVisible = false
+    },
   },
   async mounted() {
     this.loadSymphonies()
@@ -192,11 +197,11 @@ export default {
     </div>
     <h4>{{activeSymphony.name}}</h4>
     <div id="symphony-components-container">
-      <div id="triggers" class="flex-container">
+      <!-- <div id="triggers" class="flex-container">
         <div class="form-container" v-for="trigger in lstTriggers" :key="trigger.id">
           <Trigger :triggerId="trigger.id"></Trigger>
         </div>
-      </div>
+      </div>-->
       <div id="orchestrations" class="flex-container">
         <div
           class="form-container"
@@ -249,6 +254,9 @@ export default {
           @click="deleteSymphony()"
         >Yes</el-button>
       </span>
+    </el-dialog>
+    <el-dialog title="Create Orchestration" :visible.sync="orchEditDialogVisible" width="50%">
+      <Orchestration v-on:updated="evtOrchestrationCreated()"></Orchestration>
     </el-dialog>
   </div>
 </template>
@@ -311,13 +319,14 @@ export default {
 }
 #symphony-components-container {
   display: grid;
-  grid-template-columns: 50% 50%;
+  /* grid-template-columns: 50% 50%; */
+  grid-template-columns: 100%;
   align-items: start;
 }
-#triggers {
+/* #triggers {
   grid-column: 1;
-}
+} */
 #orchestrations {
-  grid-column: 2;
+  grid-column: 1;
 }
 </style>
