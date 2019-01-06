@@ -1,8 +1,10 @@
 <script>
 const settings = require('../appSettings')
 import axios from 'axios'
+import Trigger from './Trigger.vue'
 export default {
   name: 'orchestration',
+  components: { Trigger },
   props: {
     orchestrationId: {
       type: Number,
@@ -11,47 +13,48 @@ export default {
   data() {
     return {
       lstTriggers: [],
+      lstTriggersUncategorized: [],
       orchestration: {},
       deleteConfirmDialogVisible: false,
       editMode: false,
-      editForm: {},
       loading: true,
     }
   },
   methods: {
     async startEdit() {
-      await this.loadTriggers()
-      this.editForm = Object.assign({}, await this.getOrchestration(false))
       this.editMode = true
     },
     async save() {
       // Validate changes
-      if (this.editForm.name == undefined || this.editForm.name == '') {
+      if (
+        this.orchestration.name == undefined ||
+        this.orchestration.name == ''
+      ) {
         this.$message.error('Please give your orchestration a title.')
         return
       }
       if (
-        this.editForm.startDelayMin == undefined ||
-        !Number.isInteger(this.editForm.startDelayMin)
+        this.orchestration.startDelayMin == undefined ||
+        !Number.isInteger(this.orchestration.startDelayMin)
       ) {
-        this.editForm.startDelayMin = 0
+        this.orchestration.startDelayMin = 0
       }
       if (
-        this.editForm.startDelayMax == undefined ||
-        !Number.isInteger(this.editForm.startDelayMax)
+        this.orchestration.startDelayMax == undefined ||
+        !Number.isInteger(this.orchestration.startDelayMax)
       ) {
-        this.editForm.startDelayMax = 0
+        this.orchestration.startDelayMax = 0
       }
 
       // Save the changes to the API
-      if (this.editForm.id != undefined) {
-        if (!Number.isInteger(this.editForm.id))
-          this.editForm.id = Number.parseInt(this.editForm.id)
+      if (this.orchestration.id != undefined) {
+        if (!Number.isInteger(this.orchestration.id))
+          this.orchestration.id = Number.parseInt(this.orchestration.id)
         const resp = await axios.put(
           `${settings.orchestrationAPI}/orchestrations/${
             this.orchestration.id
           }`,
-          this.editForm
+          this.orchestration
         )
         if (resp.status == 200) {
           this.$message.success('Orchestration updated.')
@@ -61,7 +64,7 @@ export default {
       } else {
         const resp = await axios.post(
           `${settings.orchestrationAPI}/orchestrations`,
-          this.editForm
+          this.orchestration
         )
         if (resp.status == 201) {
           this.$message.success('Orchestration created.')
@@ -72,28 +75,39 @@ export default {
       this.$emit('updated', this.orchestration.id) // Notify the parent needs to refresh.
 
       // Update the display object
-      this.orchestration = Object.assign({}, await this.getOrchestration(true))
-      this.editForm = null
       this.editMode = false
     },
     cancelEdit() {
-      this.editForm = {}
+      this.getOrchestration(false)
       this.editMode = false
     },
     handleStartDelayMin() {
       // Make sure the max start delay is equal or greater to the min start delay
-      if (this.editForm.startDelayMax < this.editForm.startDelayMin)
-        this.editForm.startDelayMax = this.editForm.startDelayMin
+      if (this.orchestration.startDelayMax < this.orchestration.startDelayMin)
+        this.orchestration.startDelayMax = this.orchestration.startDelayMin
     },
     handleStartDelayMax() {
       // Make sure the max start delay is equal or greater to the min start delay
-      if (this.editForm.startDelayMin > this.editForm.startDelayMax)
-        this.editForm.startDelayMin = this.editForm.startDelayMax
+      if (this.orchestration.startDelayMin > this.orchestration.startDelayMax)
+        this.orchestration.startDelayMin = this.orchestration.startDelayMax
+    },
+    async loadTriggersBulk() {
+      try {
+        const response = await axios.get(
+          `${settings.orchestrationAPI}/triggers`
+        )
+        // assign the ungrouped list
+        this.lstTriggersUncategorized = response.data
+      } catch (e) {
+        this.$message.error(`Error loading triggers: ${e.message}`)
+      }
     },
     async loadTriggers() {
       // Get all triggers and build a categorized list
       try {
-        let response = await axios.get(`${settings.orchestrationAPI}/triggers`)
+        const response = await axios.get(
+          `${settings.orchestrationAPI}/triggers`
+        )
         // Build group of Switch triggers
         const switchTriggers = response.data.filter(obj => {
           return obj.type == 'SWITCH'
@@ -114,12 +128,18 @@ export default {
         this.$message.error(`Error loading triggers: ${e.message}`)
       }
     },
-    async getOrchestration(resolveTriggers) {
+    getTriggerLabel(triggerId) {
+      const trigger = this.lstTriggersUncategorized.find(obj => {
+        return obj.id == triggerId
+      })
+      if (trigger != undefined) {
+        return trigger.name
+      }
+    },
+    async getOrchestration() {
       try {
         let response = await axios.get(
-          `${settings.orchestrationAPI}/orchestrations/${
-            this.orchestrationId
-          }?resolveTriggers=${resolveTriggers}`
+          `${settings.orchestrationAPI}/orchestrations/${this.orchestrationId}`
         )
         return response.data // Load the display object
 
@@ -135,9 +155,11 @@ export default {
     },
   },
   async created() {
+    await this.loadTriggers()
+    await this.loadTriggersBulk()
     if (this.orchestrationId) {
       // Get the orchestration object
-      this.orchestration = Object.assign({}, await this.getOrchestration(true))
+      this.orchestration = await this.getOrchestration()
     } else {
       // No orchestration Id implies that this has been instantiated to create a new orchestration.
       this.loading = false
@@ -156,7 +178,7 @@ export default {
       <span v-if="editMode == false" class="card-title">{{orchestration.name}}</span>
       <div v-if="editMode == true" style="float: left; padding: 4px 4px; margin-right: 3px">
         <b>Name:</b>
-        <input type="text" v-model="editForm.name">
+        <input type="text" v-model="orchestration.name">
       </div>
       <el-tooltip v-if="editMode == false" content="Execute this orchestration" placement="bottom">
         <el-button
@@ -205,7 +227,7 @@ export default {
         <span v-if="editMode == false">{{orchestration.autoStart}}&nbsp;</span>
         <el-switch
           v-if="editMode == true"
-          v-model="editForm.autoStart"
+          v-model="orchestration.autoStart"
           active-text="Yes"
           active-color="green"
           inactive-text="No"
@@ -247,7 +269,7 @@ export default {
         <div v-if="editMode == true">
           <div style="float:right">Start Delay (Min.):
             <el-input-number
-              v-model="editForm.startDelayMin"
+              v-model="orchestration.startDelayMin"
               @change="handleStartDelayMin()"
               :min="0"
               :max="3600"
@@ -256,7 +278,7 @@ export default {
           </div>
           <div style="float:right">Start Delay (Max.):
             <el-input-number
-              v-model="editForm.startDelayMax"
+              v-model="orchestration.startDelayMax"
               @change="handleStartDelayMax()"
               :min="0"
               :max="3600"
@@ -270,13 +292,15 @@ export default {
       <div id="triggers">
         <h4>Triggers</h4>
         <div v-if="editMode == false">
-          <div class="flex-container" v-for="trigger in orchestration.triggers" :key="trigger.id">
-            <div class="flex-item">{{trigger.name}}</div>
+          <div class="flex-container" v-for="t in orchestration.triggers" :key="t">
+            <div class="flex-item">
+              <Trigger :triggerId="t"></Trigger>
+            </div>
           </div>
         </div>
         <div v-if="editMode == true">
           <el-select
-            v-model="editForm.triggers"
+            v-model="orchestration.triggers"
             multiple
             placeholder="Select triggers"
             size="small"
@@ -290,8 +314,8 @@ export default {
               <el-option
                 v-for="trigger in group.triggers"
                 :key="trigger.id"
-                :label="trigger.name"
-                :value="trigger"
+                :label="getTriggerLabel(trigger.id)"
+                :value="trigger.id"
                 class="popup-text"
                 style="font-weight:normal"
               ></el-option>
