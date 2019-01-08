@@ -50,7 +50,7 @@ export default {
         .catch(function(err) {
           this.$message.error(`Error updating sound!! ${err.message}`)
         })
-      this.$emit('deleted', this.sound.id) // It's not really deleted, but the parent needs to refresh anyway.
+      this.$emit('updated', this.sound.id)
       this.editDialogVisible = false
     },
     async deleteSound() {

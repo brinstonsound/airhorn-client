@@ -2,12 +2,16 @@
 const settings = require('../appSettings')
 import axios from 'axios'
 import Trigger from './Trigger.vue'
+import Action from './Action.vue'
 export default {
   name: 'orchestration',
-  components: { Trigger },
+  components: { Trigger, Action },
   props: {
     orchestrationId: {
-      type: Number,
+      type: Number
+    },
+    symphonyId: {
+      type: Number
     },
   },
   data() {
@@ -22,6 +26,14 @@ export default {
   },
   methods: {
     async startEdit() {
+      if(this.orchestration.id == undefined) {
+        this.orchestration = {
+          symphonyId: this.symphonyId,
+          autoStart: false,
+          startDelayMin: 0,
+          startDelayMax: 0,
+        }
+      }
       this.editMode = true
     },
     async save() {
@@ -45,7 +57,6 @@ export default {
       ) {
         this.orchestration.startDelayMax = 0
       }
-
       // Save the changes to the API
       if (this.orchestration.id != undefined) {
         if (!Number.isInteger(this.orchestration.id))
@@ -153,6 +164,7 @@ export default {
         this.$message.error(`Error loading orchestration: ${e.message}`)
       }
     },
+    deleteOrchestration() {},
   },
   async created() {
     await this.loadTriggers()
@@ -218,6 +230,14 @@ export default {
           icon="el-icon-circle-close-outline"
           circle
           @click="cancelEdit()"
+        ></el-button>
+      </el-tooltip>
+      <el-tooltip v-if="editMode == true" content="Delete this orchestration" placement="bottom">
+        <el-button
+          style="float: right; padding: 4px 4px; margin-right: 10px"
+          icon="el-icon-circle-trash-outline"
+          circle
+          @click="deleteOrchestration()"
         ></el-button>
       </el-tooltip>
     </div>
@@ -326,7 +346,9 @@ export default {
       <div id="actions">
         <h4>Actions</h4>
         <div class="flex-container" v-for="action in orchestration.actions" :key="action.id">
-          <div class="flex-item">{{action.name}} [{{action.type}}]</div>
+          <div class="flex-item">
+            <Action :actionId="action.id"></Action>
+          </div>
         </div>
         <el-button v-if="editMode == true" size="mini">Add Action</el-button>
       </div>

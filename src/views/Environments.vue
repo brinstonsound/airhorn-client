@@ -145,7 +145,7 @@ export default {
         )
       }
     },
-    evtOrechestrationCreated() {
+    evtOrchestrationCreated() {
       this.getActiveSymphony()
       this.orchEditDialogVisible = false
     },
@@ -255,8 +255,8 @@ export default {
         >Yes</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="Create Orchestration" :visible.sync="orchEditDialogVisible" width="50%">
-      <Orchestration v-on:updated="evtOrchestrationCreated()"></Orchestration>
+    <el-dialog title="Create Orchestration" :visible.sync="orchEditDialogVisible">
+      <Orchestration :symphonyId="activeSymphony.id" v-on:updated="evtOrchestrationCreated()"></Orchestration>
     </el-dialog>
   </div>
 </template>

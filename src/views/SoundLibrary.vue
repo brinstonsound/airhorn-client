@@ -219,6 +219,11 @@ export default {
       this.activeCategory = 0
       this.activeCategory = tmp
     },
+    refreshSound() {
+      const tmp = this.activeCategory
+      this.activeCategory = 0
+      this.activeCategory = tmp
+    },
     searchDialog() {
       this.$message.error('Not implemented yet.')
     },
@@ -293,6 +298,7 @@ export default {
                 v-bind:soundId="sound.id"
                 class="sound-card"
                 v-on:deleted="removeSound($event)"
+                v-on:updated="refreshSound()"
               />
             </div>
           </div>
