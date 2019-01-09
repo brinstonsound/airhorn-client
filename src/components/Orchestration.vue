@@ -8,10 +8,10 @@ export default {
   components: { Trigger, Action },
   props: {
     orchestrationId: {
-      type: Number
+      type: Number,
     },
     symphonyId: {
-      type: Number
+      type: Number,
     },
   },
   data() {
@@ -26,7 +26,7 @@ export default {
   },
   methods: {
     async startEdit() {
-      if(this.orchestration.id == undefined) {
+      if (this.orchestration.id == undefined) {
         this.orchestration = {
           symphonyId: this.symphonyId,
           autoStart: false,
@@ -164,7 +164,36 @@ export default {
         this.$message.error(`Error loading orchestration: ${e.message}`)
       }
     },
-    deleteOrchestration() {},
+    deleteOrchestration() {
+      this.$confirm(
+        'This will permanently delete the orchestration. Continue?',
+        'Warning',
+        {
+          confirmButtonText: 'OK',
+          cancelButtonText: 'Cancel',
+          type: 'warning',
+        }
+      )
+        .then(async () => {
+          // Good to go.  Blow it away!
+          await axios.delete(
+            `${settings.orchestrationAPI}/orchestrations/${
+              this.orchestrationId
+            }`
+          )
+          this.$message({
+            type: 'success',
+            message: 'Delete completed',
+          })
+          this.$emit('deleted', this.orchestration.id) // Notify the parent needs to refresh.
+        })
+        .catch((e) => {
+          this.$message({
+            type: 'info',
+            message: 'Delete canceled: ' + e.message,
+          })
+        })
+    },
   },
   async created() {
     await this.loadTriggers()
@@ -235,7 +264,7 @@ export default {
       <el-tooltip v-if="editMode == true" content="Delete this orchestration" placement="bottom">
         <el-button
           style="float: right; padding: 4px 4px; margin-right: 10px"
-          icon="el-icon-circle-trash-outline"
+          icon="el-icon-delete"
           circle
           @click="deleteOrchestration()"
         ></el-button>
@@ -253,7 +282,13 @@ export default {
           inactive-text="No"
           inactive-color="red"
         ></el-switch>
-        <el-popover
+        <div class="flex-item tooltip">
+          <i class="el-icon-question"></i>
+          <span
+            class="tooltiptext"
+          >An orchestration with Auto Start set to true will automatically execute as soon as the Airhorn server is powered up.</span>
+        </div>
+        <!-- <el-popover
           placement="bottom"
           title="Orchestrations: Auto Start"
           width="250"
@@ -267,7 +302,7 @@ export default {
             circle
             size="small"
           ></el-button>
-        </el-popover>
+        </el-popover>-->
       </span>
       <div class="flex-item">
         <div v-if="editMode == false">
@@ -276,7 +311,13 @@ export default {
             v-if="orchestration.startDelayMin == orchestration.startDelayMax"
           >{{orchestration.startDelayMin}} (secs.)</span>
           <span v-else>{{orchestration.startDelayMin}}-{{orchestration.startDelayMax}} (secs.)</span>
-          <el-popover
+          <div class="flex-item tooltip">
+            <i class="el-icon-question"></i>
+            <span
+              class="tooltiptext"
+            >An orchestration with a Start Delay set will pause for the specified number of seconds before executing all of its actions simultaneously. If a minimum and maximum start delay are set, then the orchestration will pause for a RANDOM number of seconds between the minimum and maximum value.</span>
+          </div>
+          <!--<el-popover
             placement="bottom"
             title="Orchestrations: Start Delay"
             width="250"
@@ -284,7 +325,7 @@ export default {
             content="An orchestration with a Start Delay set will pause for the specified number of seconds before executing all of its actions simultaneously.  If a minimum and maximum start delay are set, then the orchestration will pause for a RANDOM number of seconds between the minimum and maximum value."
           >
             <el-button slot="reference" icon="el-icon-question" circle size="small"></el-button>
-          </el-popover>
+          </el-popover>-->
         </div>
         <div v-if="editMode == true">
           <div style="float:right">Start Delay (Min.):
@@ -358,7 +399,7 @@ export default {
 
 <style scoped>
 .card {
-  width: 500px;
+  width: 100%;
   border-style: solid;
   border-width: 2px;
   border-radius: 3px;
@@ -424,6 +465,7 @@ export default {
   -ms-flex-item-align: auto;
   align-self: auto;
   margin-left: 5px;
+  margin-right: 5px;
 }
 #orch-components-container {
   display: grid;
@@ -437,5 +479,31 @@ export default {
 }
 #actions {
   grid-column: 2;
+}
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 150px;
+  background-color: white;
+  color: black;
+  text-align: center;
+  padding: 5px;
+  border-radius: 6px;
+
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
 }
 </style>

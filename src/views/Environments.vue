@@ -149,6 +149,9 @@ export default {
       this.getActiveSymphony()
       this.orchEditDialogVisible = false
     },
+    evtOrchestrationDeleted() {
+      this.getActiveSymphony()
+    },
   },
   async mounted() {
     this.loadSymphonies()
@@ -208,7 +211,10 @@ export default {
           v-for="orchestration in activeSymphony.orchestrations"
           :key="orchestration.id"
         >
-          <Orchestration :orchestrationId="orchestration.id"></Orchestration>
+          <Orchestration
+            :orchestrationId="orchestration.id"
+            v-on:deleted="evtOrchestrationDeleted()"
+          ></Orchestration>
         </div>
       </div>
     </div>
