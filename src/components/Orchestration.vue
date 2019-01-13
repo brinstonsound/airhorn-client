@@ -128,13 +128,13 @@ export default {
           triggers: switchTriggers,
         })
         // Build group of Manual triggers
-        const manTriggers = response.data.filter(obj => {
-          return obj.type == 'MANUAL'
-        })
-        this.lstTriggers.push({
-          label: 'Manual Triggers',
-          triggers: manTriggers,
-        })
+        // const manTriggers = response.data.filter(obj => {
+        //   return obj.type == 'MANUAL'
+        // })
+        // this.lstTriggers.push({
+        //   label: 'Manual Triggers',
+        //   triggers: manTriggers,
+        // })
       } catch (e) {
         this.$message.error(`Error loading triggers: ${e.message}`)
       }
@@ -153,13 +153,6 @@ export default {
           `${settings.orchestrationAPI}/orchestrations/${this.orchestrationId}`
         )
         return response.data // Load the display object
-
-        // Get the orchestration's actions
-        // this.orchestration.actions.forEach(action => {
-        //   axios
-        //     .get(`${settings.orchestrationAPI}/actions/${action.id}`)
-        //     .then(resp => (this.lstActions += `[${resp.data.name}] `))
-        // })
       } catch (e) {
         this.$message.error(`Error loading orchestration: ${e.message}`)
       }
@@ -187,12 +180,24 @@ export default {
           })
           this.$emit('deleted', this.orchestration.id) // Notify the parent needs to refresh.
         })
-        .catch((e) => {
+        .catch(e => {
           this.$message({
             type: 'info',
             message: 'Delete canceled: ' + e.message,
           })
         })
+    },
+    async executeOrchestration(orchestrationId) {
+      this.$message.success('Executing orchestration...')
+      try {
+        await axios.post(
+          `${
+            settings.orchestrationAPI
+          }/orchestrations/${orchestrationId}/execute`
+        )
+      } catch (error) {
+        this.$message.error(`Error executing orchestration: ${error.message}`)
+      }
     },
   },
   async created() {
@@ -221,12 +226,12 @@ export default {
         <b>Name:</b>
         <input type="text" v-model="orchestration.name">
       </div>
-      <el-tooltip v-if="editMode == false" content="Execute this orchestration" placement="bottom">
+      <el-tooltip v-if="editMode == false" content="Test this orchestration" placement="bottom">
         <el-button
           style="float: right; padding: 4px 4px; margin-right: 3px"
           icon="el-icon-caret-right"
           circle
-          @click="execute()"
+          @click="executeOrchestration(orchestration.id)"
         ></el-button>
       </el-tooltip>
       <el-tooltip v-if="editMode == false" content="Edit this orchestration" placement="bottom">
@@ -270,91 +275,72 @@ export default {
         ></el-button>
       </el-tooltip>
     </div>
-    <div id="properties" class="flex-container">
-      <span class="flex-item">
-        <b>Auto Start:</b>
-        <span v-if="editMode == false">{{orchestration.autoStart}}&nbsp;</span>
-        <el-switch
-          v-if="editMode == true"
-          v-model="orchestration.autoStart"
-          active-text="Yes"
-          active-color="green"
-          inactive-text="No"
-          inactive-color="red"
-        ></el-switch>
-        <div class="flex-item tooltip">
-          <i class="el-icon-question"></i>
-          <span
-            class="tooltiptext"
-          >An orchestration with Auto Start set to true will automatically execute as soon as the Airhorn server is powered up.</span>
+    <div class="card-body">
+      <div id="autoStart">
+        <div class="grid-box">
+          <span>
+            <div class="tooltip">
+              <i class="el-icon-question"></i>
+              <span
+                class="tooltiptext"
+              >An orchestration with Auto Start set to true will automatically execute as soon as the Airhorn server is powered up.</span>
+            </div>
+            <b>Auto Start:&nbsp;</b>
+            <span v-if="editMode == false">{{orchestration.autoStart}}&nbsp;</span>
+            <el-checkbox v-if="editMode == true" v-model="orchestration.autoStart"></el-checkbox>
+          </span>
         </div>
-        <!-- <el-popover
-          placement="bottom"
-          title="Orchestrations: Auto Start"
-          width="250"
-          trigger="click"
-          content="An orchestration with Auto Start set to true will automatically execute as soon as the Airhorn server is powered up."
-        >
-          <el-button
-            v-if="editMode == false"
-            slot="reference"
-            icon="el-icon-question"
-            circle
-            size="small"
-          ></el-button>
-        </el-popover>-->
-      </span>
-      <div class="flex-item">
+      </div>
+      <div id="startDelay">
         <div v-if="editMode == false">
-          <b>Start Delay:</b>
+          <div class="tooltip">
+            <i class="el-icon-question"></i>
+            <span
+              class="tooltiptext"
+            >An orchestration with a Start Delay set will pause for that number of seconds before executing all of its actions at once. If a minimum and maximum start delay are set, then the orchestration will pause for a RANDOM number of seconds between the minimum and maximum.</span>
+          </div>
+          <b>Start Delay:&nbsp;</b>
           <span
             v-if="orchestration.startDelayMin == orchestration.startDelayMax"
           >{{orchestration.startDelayMin}} (secs.)</span>
           <span v-else>{{orchestration.startDelayMin}}-{{orchestration.startDelayMax}} (secs.)</span>
-          <div class="flex-item tooltip">
-            <i class="el-icon-question"></i>
-            <span
-              class="tooltiptext"
-            >An orchestration with a Start Delay set will pause for the specified number of seconds before executing all of its actions simultaneously. If a minimum and maximum start delay are set, then the orchestration will pause for a RANDOM number of seconds between the minimum and maximum value.</span>
-          </div>
-          <!--<el-popover
-            placement="bottom"
-            title="Orchestrations: Start Delay"
-            width="250"
-            trigger="click"
-            content="An orchestration with a Start Delay set will pause for the specified number of seconds before executing all of its actions simultaneously.  If a minimum and maximum start delay are set, then the orchestration will pause for a RANDOM number of seconds between the minimum and maximum value."
-          >
-            <el-button slot="reference" icon="el-icon-question" circle size="small"></el-button>
-          </el-popover>-->
         </div>
-        <div v-if="editMode == true">
-          <div style="float:right">Start Delay (Min.):
-            <el-input-number
-              v-model="orchestration.startDelayMin"
-              @change="handleStartDelayMin()"
-              :min="0"
-              :max="3600"
-              size="mini"
-            ></el-input-number>(secs.)
-          </div>
-          <div style="float:right">Start Delay (Max.):
-            <el-input-number
-              v-model="orchestration.startDelayMax"
-              @change="handleStartDelayMax()"
-              :min="0"
-              :max="3600"
-              size="mini"
-            ></el-input-number>(secs.)
+        <div v-if="editMode == true" class>
+          <div class="grid-box">
+            <div class="grid-col-1">Start Delay (Min.):</div>
+            <div class="grid-col-2">
+              <el-input-number
+                v-model="orchestration.startDelayMin"
+                @change="handleStartDelayMin()"
+                :min="0"
+                :max="3600"
+                size="mini"
+              ></el-input-number>(secs.)
+            </div>
+            <div class="grid-col-1">Start Delay (Max.):</div>
+            <div class="grid-col-2">
+              <el-input-number
+                v-model="orchestration.startDelayMax"
+                @change="handleStartDelayMax()"
+                :min="0"
+                :max="3600"
+                size="mini"
+              ></el-input-number>(secs.)
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <div id="orch-components-container">
       <div id="triggers">
-        <h4>Triggers</h4>
+        <div class="tooltip">
+          <i class="el-icon-question"></i>
+          <span
+            class="tooltiptext"
+          >An orchestration can be executed manually or by a trigger, which corresponds to a switch on the layout.</span>
+        </div>
+        <span style="font-weight:bolder">Triggers</span>
         <div v-if="editMode == false">
-          <div class="flex-container" v-for="t in orchestration.triggers" :key="t">
-            <div class="flex-item">
+          <div class="grid-box" v-for="t in orchestration.triggers" :key="t">
+            <div class="grid-col-1">
               <Trigger :triggerId="t"></Trigger>
             </div>
           </div>
@@ -385,9 +371,16 @@ export default {
         </div>
       </div>
       <div id="actions">
-        <h4>Actions</h4>
-        <div class="flex-container" v-for="action in orchestration.actions" :key="action.id">
-          <div class="flex-item">
+        <div class="tooltip">
+          <i class="el-icon-question"></i>
+          <span class="tooltiptext">Actions are what an orchestration "does" when it is executed.
+            <br>All actions are executed at the same time.
+          </span>
+        </div>
+        <span style="font-weight:bolder">Actions</span>
+
+        <div class="grid-box" v-for="action in orchestration.actions" :key="action.id">
+          <div class="grid-col-1">
             <Action :actionId="action.id"></Action>
           </div>
         </div>
@@ -419,87 +412,70 @@ export default {
   font-weight: 700;
 }
 .card-body {
-  font-size: smaller;
-  font-weight: 300;
-  padding-top: 2px;
-  padding-left: 4px;
-  padding-right: 4px;
-  padding-bottom: 2px;
+  display: grid;
+  grid-template-columns: 40% 60%;
+  grid-column-gap: 10px;
+  grid-row-gap: 10px;
+  align-items: start;
+  margin: 10px;
 }
+
 .popup-text {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   font-size: 0.9em;
 }
-.flex-container {
-  display: -ms-flexbox;
-  display: -webkit-flex;
-  display: flex;
-  -webkit-flex-direction: row;
-  -ms-flex-direction: row;
-  flex-direction: row;
-  -webkit-flex-wrap: nowrap;
-  -ms-flex-wrap: nowrap;
-  flex-wrap: nowrap;
 
-  -webkit-justify-content: flex-start;
-  justify-content: flex-start;
-  -ms-flex-pack: end;
-
-  -webkit-align-content: flex-start;
-  -ms-flex-line-pack: start;
-  align-content: flex-start;
-
-  -webkit-align-items: flex-start;
-  -ms-flex-align: start;
-  align-items: flex-start;
-  margin: 10px;
+#autoStart {
+  grid-column: 1;
+  grid-row: 1;
 }
-.flex-item {
-  -webkit-order: 0;
-  -ms-flex-order: 0;
-  order: 0;
-  -webkit-flex: 0 1 auto;
-  -ms-flex: 0 1 auto;
-  flex: 0 1 auto;
-  -webkit-align-self: auto;
-  -ms-flex-item-align: auto;
-  align-self: auto;
-  margin-left: 5px;
-  margin-right: 5px;
-}
-#orch-components-container {
-  display: grid;
-  grid-template-columns: 30% 70%;
-  grid-column-gap: 10px;
-  align-items: start;
-  margin: 10px;
+#startDelay {
+  grid-column: 2;
+  grid-row: 1;
 }
 #triggers {
   grid-column: 1;
+  grid-row: 2;
 }
 #actions {
   grid-column: 2;
+  grid-row: 2;
 }
+.grid-box {
+  display: grid;
+  align-items: start;
+  grid-column-gap: 5px;
+}
+.grid-col-1 {
+  grid-column: 1;
+  align-self: center;
+}
+.grid-col-2 {
+  grid-column: 2;
+  align-self: center;
+}
+
 /* Tooltip container */
 .tooltip {
   position: relative;
   display: inline-block;
-  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+  margin-left: 3px;
+  /*border-bottom: 1px dotted black;  If you want dots under the hoverable text */
 }
 
 /* Tooltip text */
 .tooltip .tooltiptext {
   visibility: hidden;
-  width: 150px;
-  background-color: white;
+  width: 200px;
+  background-color: lightgrey;
   color: black;
-  text-align: center;
+  text-align: left;
   padding: 5px;
   border-radius: 6px;
 
   /* Position the tooltip text - see examples below! */
   position: absolute;
-  z-index: 1;
+  z-index: 10;
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */

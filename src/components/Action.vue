@@ -15,6 +15,15 @@ export default {
       nextOrchestration: {},
     }
   },
+  computed: {
+    shortType() {
+      if (this.action.type === 'ORCHESTRATION') {
+        return 'ORCH'
+      } else {
+        return this.action.type
+      }
+    },
+  },
   async created() {
     // Load this action
     try {
@@ -22,19 +31,21 @@ export default {
         `${settings.orchestrationAPI}/actions/${this.actionId}`
       )
       this.action = actionResp.data
-      if(this.action.type == 'SOUND'){
-      const soundResp = await axios.get(
-        `${settings.orchestrationAPI}/sounds/${this.action.sound.soundId}`
-      )
-      this.sound = soundResp.data
+      if (this.action.type == 'SOUND') {
+        const soundResp = await axios.get(
+          `${settings.orchestrationAPI}/sounds/${this.action.sound.soundId}`
+        )
+        this.sound = soundResp.data
       }
-      if(this.action.type == 'ORCHESTRATION'){
-      const orchResp = await axios.get(
-        `${settings.orchestrationAPI}/orchestrations/${this.action.nextOrchestrationId}`
-      )
-      this.nextOrchestration = orchResp.data
+      if (this.action.type == 'ORCHESTRATION') {
+        const orchResp = await axios.get(
+          `${settings.orchestrationAPI}/orchestrations/${
+            this.action.nextOrchestrationId
+          }`
+        )
+        this.nextOrchestration = orchResp.data
       }
-          } catch (e) {
+    } catch (e) {
       this.$message.error(`Error loading action: ${e.message}`)
     }
   },
@@ -43,7 +54,7 @@ export default {
 
 <template>
   <div class="flex-container">
-    <div class="flex-item">[{{action.type}}] -> </div>
+    <div class="flex-item">[{{this.shortType}}] -></div>
     <div class="flex-item" v-if="action.type == 'SOUND'">{{sound.name}}</div>
     <div class="flex-item" v-if="action.type == 'ORCHESTRATION'">{{nextOrchestration.name}}</div>
   </div>
