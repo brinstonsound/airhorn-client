@@ -54,8 +54,14 @@ export default {
 
 <template>
   <div class="flex-container">
-    <div class="flex-item">[{{this.shortType}}] -></div>
-    <div class="flex-item" v-if="action.type == 'SOUND'">{{sound.name}}</div>
+    <div class="flex-item">[{{this.shortType}}]&nbsp;</div>
+    <div class="flex-item" v-if="action.type == 'SOUND'">
+      <div class="grid-box">
+        <div class="grid-col-1" style="grid-row:1">{{sound.name}}</div>
+        <div class="grid-col-1" style="grid-row:2">Vol:{{action.sound.volume * 100}}</div>
+        <div class="grid-col-1" style="grid-row:3">Spkrs: {{JSON.stringify(action.sound.speakers)}}</div>
+      </div>
+    </div>
     <div class="flex-item" v-if="action.type == 'ORCHESTRATION'">{{nextOrchestration.name}}</div>
   </div>
 </template>
@@ -96,5 +102,18 @@ export default {
   -ms-flex-item-align: auto;
   align-self: auto;
   margin-left: 5px;
+}
+.grid-box {
+  display: grid;
+  align-items: start;
+  grid-column-gap: 5px;
+}
+.grid-col-1 {
+  grid-column: 1;
+  align-self: center;
+}
+.grid-col-2 {
+  grid-column: 2;
+  align-self: center;
 }
 </style>

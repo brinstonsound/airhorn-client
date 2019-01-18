@@ -11,6 +11,8 @@ export default {
       lstSymphonies: [],
       lstTriggers: [],
       lstManualButtons: [],
+      mainSwitchSoundsEnabled: true,
+      mainSwitchText: 'Mute All Sounds',
     }
   },
   methods: {
@@ -114,7 +116,7 @@ export default {
                 // Matched the trigger to the orchestration
                 // Assign the trigger to the manual button
                 Object.keys(this.lstManualButtons).forEach(idx => {
-                  if(this.lstManualButtons[idx].key == trigger.keyBinding) {
+                  if (this.lstManualButtons[idx].key == trigger.keyBinding) {
                     this.lstManualButtons[idx].orchestration = orch
                   }
                 })
@@ -128,16 +130,42 @@ export default {
         )
       }
     },
-    async executeOrchestration(orchestrationId) {
-      this.$message.success('Executing orchestration...')
+    async executeOrchestration(orchestration) {
+      this.$message.success(`Executing orchestration ${orchestration.name}`)
       try {
         await axios.post(
           `${
             settings.orchestrationAPI
-          }/orchestrations/${orchestrationId}/execute`
+          }/orchestrations/${orchestration.id}/execute`
         )
       } catch (error) {
         this.$message.error(`Error executing orchestration: ${error.message}`)
+      }
+    },
+    startOrchestrations() {
+      // Search through all of the orchestrations in
+      // this symphony, and if you find one that has
+      // its auto-start flag set, execute it.
+      this.activeSymphony.orchestrations.forEach(orchestration => {
+        if (orchestration.autoStart) {
+          this.executeOrchestration(orchestration)
+        }
+      })
+    },
+    toggleMainSwitch() {
+      if (this.mainSwitchSoundsEnabled) {
+        // Mute all sounds
+        this.mainSwitchSoundsEnabled = false
+        // Reset button text
+        this.mainSwitchText = 'Enable All Sounds'
+      } else {
+        // Enable all sounds
+        this.mainSwitchSoundsEnabled = true
+
+        // Restart all auto-starting orchestrations
+        this.startOrchestrations()
+        // Reset button text
+        this.mainSwitchText = 'Mute All Sounds'
       }
     },
   },
@@ -145,6 +173,7 @@ export default {
     await this.loadSymphonies()
     await this.getActiveSymphony()
     await this.loadManualTriggers()
+    this.startOrchestrations()
   },
 }
 </script>
@@ -169,11 +198,14 @@ export default {
         </el-select>
       </div>
     </div>
+    <h4>System Status</h4>
+    <p>Let's think of what needs to go in this section...</p>
+    <el-button type="primary" @click="toggleMainSwitch()">{{mainSwitchText}}</el-button>
     <h4>Manual Triggers</h4>
-    <div class="flex-container" v-for="button in lstManualButtons" :key="button.key">
-      <div class="flex-item">
+    <div class="flex-container">
+      <div class="flex-item" v-for="button in lstManualButtons" :key="button.key">
         <el-button
-          @click="executeOrchestration(button.orchestration.id)"
+          @click="executeOrchestration(button.orchestration)"
           :disabled="button.orchestration.name == 'Unassigned'"
         >{{button.orchestration.name}}</el-button>
       </div>
@@ -189,9 +221,9 @@ export default {
   -webkit-flex-direction: row;
   -ms-flex-direction: row;
   flex-direction: row;
-  -webkit-flex-wrap: nowrap;
-  -ms-flex-wrap: nowrap;
-  flex-wrap: nowrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
 
   -webkit-justify-content: flex-start;
   justify-content: flex-start;
@@ -216,6 +248,6 @@ export default {
   -webkit-align-self: auto;
   -ms-flex-item-align: auto;
   align-self: auto;
-  margin-left: 5px;
+  margin: 5px;
 }
 </style>
