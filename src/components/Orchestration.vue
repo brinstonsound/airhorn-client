@@ -127,14 +127,14 @@ export default {
           label: 'Hardware Switches',
           triggers: switchTriggers,
         })
-        // Build group of Manual triggers
-        // const manTriggers = response.data.filter(obj => {
-        //   return obj.type == 'MANUAL'
-        // })
-        // this.lstTriggers.push({
-        //   label: 'Manual Triggers',
-        //   triggers: manTriggers,
-        // })
+        //Build group of Manual triggers
+        const manTriggers = response.data.filter(obj => {
+          return obj.type == 'MANUAL'
+        })
+        this.lstTriggers.push({
+          label: 'Manual Triggers',
+          triggers: manTriggers,
+        })
       } catch (e) {
         this.$message.error(`Error loading triggers: ${e.message}`)
       }
@@ -286,7 +286,7 @@ export default {
               >An orchestration with Auto Start set to true will automatically execute as soon as the Airhorn server is powered up.</span>
             </div>
             <b>Auto Start:&nbsp;</b>
-            <span v-if="editMode == false">{{orchestration.autoStart}}&nbsp;</span>
+            <span v-if="editMode == false">{{orchestration.autoStart ? 'Yes' : 'No'}}&nbsp;</span>
             <el-checkbox v-if="editMode == true" v-model="orchestration.autoStart"></el-checkbox>
           </span>
         </div>
@@ -335,7 +335,7 @@ export default {
           <i class="el-icon-question"></i>
           <span
             class="tooltiptext"
-          >An orchestration can be executed manually or by a trigger, which corresponds to a switch on the layout.</span>
+          >An orchestration can be triggered manually or by a switch on the layout.</span>
         </div>
         <span style="font-weight:bolder">Triggers</span>
         <div v-if="editMode == false">
@@ -361,7 +361,7 @@ export default {
               <el-option
                 v-for="trigger in group.triggers"
                 :key="trigger.id"
-                :label="getTriggerLabel(trigger.id)"
+                :label="trigger.name"
                 :value="trigger.id"
                 class="popup-text"
                 style="font-weight:normal"

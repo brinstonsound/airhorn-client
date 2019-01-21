@@ -454,9 +454,17 @@ export default {
   margin-right: 10px;
 }
 .categoryHeader {
-  background-color: cornflowerblue;
-  border-radius: 5px;
+  /* background-color: cornflowerblue; */
+  /* border-radius: 5px; */
   width: 100%;
+  border-bottom-style: solid;
+  border-bottom-color: cornflowerblue;
+  border-bottom-width: 1px;
+  border-left-style: solid;
+  border-left-color: cornflowerblue;
+  border-left-width: 1px;
+  border-bottom-left-radius: 5px;
+
 }
 .categoryTitle {
   font-size: 1.25em;

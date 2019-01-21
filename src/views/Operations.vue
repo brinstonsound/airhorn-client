@@ -12,7 +12,7 @@ export default {
       lstTriggers: [],
       lstManualButtons: [],
       mainSwitchSoundsEnabled: true,
-      mainSwitchText: 'Mute All Sounds',
+      mainSwitchText: 'Mute Ambient Sounds',
     }
   },
   methods: {
@@ -79,7 +79,7 @@ export default {
       try {
         // Load the list manual triggers
         this.lstManualButtons = []
-        for (var i = 0; i < 10; i++) {
+        for (var i = 1; i < 11; i++) {
           const manualButton = {
             key: i,
             orchestration: {
@@ -134,38 +134,48 @@ export default {
       this.$message.success(`Executing orchestration ${orchestration.name}`)
       try {
         await axios.post(
-          `${
-            settings.orchestrationAPI
-          }/orchestrations/${orchestration.id}/execute`
+          `${settings.orchestrationAPI}/orchestrations/${
+            orchestration.id
+          }/execute`
         )
       } catch (error) {
         this.$message.error(`Error executing orchestration: ${error.message}`)
       }
     },
-    startOrchestrations() {
-      // Search through all of the orchestrations in
-      // this symphony, and if you find one that has
-      // its auto-start flag set, execute it.
-      this.activeSymphony.orchestrations.forEach(orchestration => {
-        if (orchestration.autoStart) {
-          this.executeOrchestration(orchestration)
-        }
-      })
+    async startOrchestrations() {
+      try {
+        await axios.post(
+          `${settings.orchestrationAPI}/orchestrations/ambient/start`
+        )
+      } catch (error) {
+        this.$message.error(`Error starting ambient sounds: ${error.message}`)
+      }
     },
-    toggleMainSwitch() {
+    async stopOrchestrations() {
+      try {
+        await axios.post(
+          `${settings.orchestrationAPI}/orchestrations/ambient/stop`
+        )
+      } catch (error) {
+        this.$message.error(`Error stopping ambient sounds: ${error.message}`)
+      }
+    },
+    async toggleMainSwitch() {
       if (this.mainSwitchSoundsEnabled) {
-        // Mute all sounds
+        // Mute Ambient Sounds
+        await this.stopOrchestrations()
         this.mainSwitchSoundsEnabled = false
+        this.$message.success('Ambient sounds muted.')
         // Reset button text
-        this.mainSwitchText = 'Enable All Sounds'
+        this.mainSwitchText = 'Enable Ambient Sounds'
       } else {
-        // Enable all sounds
+        // Enable Ambient Sounds
         this.mainSwitchSoundsEnabled = true
-
         // Restart all auto-starting orchestrations
-        this.startOrchestrations()
+        await this.startOrchestrations()
+        this.$message.success('Ambient sounds enabled.')
         // Reset button text
-        this.mainSwitchText = 'Mute All Sounds'
+        this.mainSwitchText = 'Mute Ambient Sounds'
       }
     },
   },
@@ -186,9 +196,9 @@ export default {
       and provide a bank of manual switches that they can click to execute an orchestration.
     </p>
     <div id="environmentSelection" class="flex-container">
-      <div class="flex-item form-label">Active Environment:</div>
+      <div class="flex-item">Active Environment:</div>
       <div class="flex-item">
-        <el-select v-model="activeSymphony.id" @change="setActiveSymphony()">
+        <el-select v-model="activeSymphony.id" @change="setActiveSymphony()" size="small">
           <el-option
             v-for="item in lstSymphonies"
             :key="item.id"
@@ -235,7 +245,7 @@ export default {
 
   -webkit-align-items: flex-start;
   -ms-flex-align: start;
-  align-items: flex-start;
+  align-items: center;
   margin: 10px;
 }
 .flex-item {
