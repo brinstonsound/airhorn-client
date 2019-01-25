@@ -12,7 +12,7 @@ export default {
       lstTriggers: [],
       lstManualButtons: [],
       mainSwitchSoundsEnabled: true,
-      mainSwitchText: 'Mute Ambient Sounds',
+      mainSwitchText: 'Reading Ambient Sound Switch...',
     }
   },
   methods: {
@@ -178,12 +178,28 @@ export default {
         this.mainSwitchText = 'Mute Ambient Sounds'
       }
     },
+    async getMainSwitchState() {
+      // This method reads the 'playAmbientSounds' setting
+      // from the orchestration service and sets the local
+      // main switch state.
+      try {
+        const response = await axios.get(
+          `${settings.orchestrationAPI}/settings/playAmbientSounds`
+        )
+        this.mainSwitchSoundsEnabled = response.data
+        this.mainSwitchText = this.mainSwitchSoundsEnabled === true
+          ? 'Mute Ambient Sounds'
+          : 'Enable Ambient Sounds'
+      } catch (error) {
+        this.$message.error(`Error reading setting: ${error.message}`)
+      }
+    },
   },
   async mounted() {
     await this.loadSymphonies()
     await this.getActiveSymphony()
-    await this.loadManualTriggers()
-    this.startOrchestrations()
+    this.loadManualTriggers()
+    this.getMainSwitchState()
   },
 }
 </script>

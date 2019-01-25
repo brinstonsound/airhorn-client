@@ -22,6 +22,7 @@ export default {
       deleteConfirmDialogVisible: false,
       editMode: false,
       loading: true,
+      editActionDialogVisible: false,
     }
   },
   methods: {
@@ -337,7 +338,7 @@ export default {
             class="tooltiptext"
           >An orchestration can be triggered manually or by a switch on the layout.</span>
         </div>
-        <span style="font-weight:bolder">Triggers</span>
+        <span style="font-weight:bolder">Triggers:</span>
         <div v-if="editMode == false">
           <div class="grid-box" v-for="t in orchestration.triggers" :key="t">
             <div class="grid-col-1">
@@ -377,16 +378,33 @@ export default {
             <br>All actions are executed at the same time.
           </span>
         </div>
-        <span style="font-weight:bolder">Actions</span>
+        <span style="font-weight:bolder">Actions:</span>
 
         <div class="grid-box" v-for="action in orchestration.actions" :key="action.id">
           <div class="grid-col-1">
             <Action :actionId="action.id"></Action>
           </div>
         </div>
-        <el-button v-if="editMode == true" size="mini">Add Action</el-button>
+        <el-button v-if="editMode == true" type="success" size="mini" @click="editActionDialogVisible = true">Add Action</el-button>
       </div>
     </div>
+    <el-dialog title="Add An Action" :visible.sync="editActionDialogVisible" width="40%">
+      <!-- <div class="upload-form-container">
+        <div class="flex-item form-label">Name:</div>
+        <div class="flex-item form-field">
+          <input type="text" v-model="categoryForm.name" class="form-field">
+        </div>
+      </div> -->
+      <span slot="footer" class="dialog-footer">
+        <el-button size="small" @click="addActionDialogVisible = false">Cancel</el-button>
+        <el-button
+          style="margin-left: 10px;"
+          size="small"
+          type="success"
+          @click="submitNewAction()"
+        >Save</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 

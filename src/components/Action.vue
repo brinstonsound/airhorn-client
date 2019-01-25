@@ -53,60 +53,26 @@ export default {
 </script>
 
 <template>
-  <div class="flex-container">
-    <div class="flex-item">[{{this.shortType}}]&nbsp;</div>
-    <div class="flex-item" v-if="action.type == 'SOUND'">
-      <div class="grid-box">
-        <div class="grid-col-1" style="grid-row:1">{{sound.name}}</div>
-        <div class="grid-col-1" style="grid-row:2">Vol:{{action.sound.volume * 100}}</div>
-        <div class="grid-col-1" style="grid-row:3">Spkrs: {{JSON.stringify(action.sound.speakers)}}</div>
-      </div>
+  <div>
+    <div class="grid-box" v-if="action.type == 'SOUND'">
+      <div style="grid-row:1; grid-column-start: 1; grid-column-end: 2;">PLAY: {{sound.name}}</div>
+      <div style="grid-row:2; grid-column: 1;">&nbsp;&nbsp;&nbsp;Volume:</div>
+      <div style="grid-row:2; grid-column: 2;">{{action.sound.volume * 100}}</div>
+      <div style="grid-row:3; grid-column: 1;">&nbsp;&nbsp;&nbsp;Speakers:</div>
+      <div style="grid-row:3; grid-column: 2;">{{JSON.stringify(action.sound.speakers)}}</div>
     </div>
-    <div class="flex-item" v-if="action.type == 'ORCHESTRATION'">{{nextOrchestration.name}}</div>
+    <div class="grid-box" v-if="action.type == 'ORCHESTRATION'">
+      <div style="grid-row:1; grid-column: 1;">LINK TO: {{nextOrchestration.name}}</div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.flex-container {
-  display: -ms-flexbox;
-  display: -webkit-flex;
-  display: flex;
-  -webkit-flex-direction: row;
-  -ms-flex-direction: row;
-  flex-direction: row;
-  -webkit-flex-wrap: nowrap;
-  -ms-flex-wrap: nowrap;
-  flex-wrap: nowrap;
-
-  -webkit-justify-content: flex-start;
-  justify-content: flex-start;
-  -ms-flex-pack: end;
-
-  -webkit-align-content: flex-start;
-  -ms-flex-line-pack: start;
-  align-content: flex-start;
-
-  -webkit-align-items: flex-start;
-  -ms-flex-align: start;
-  align-items: flex-start;
-  margin: 10px;
-}
-.flex-item {
-  -webkit-order: 0;
-  -ms-flex-order: 0;
-  order: 0;
-  -webkit-flex: 0 1 auto;
-  -ms-flex: 0 1 auto;
-  flex: 0 1 auto;
-  -webkit-align-self: auto;
-  -ms-flex-item-align: auto;
-  align-self: auto;
-  margin-left: 5px;
-}
 .grid-box {
   display: grid;
-  align-items: start;
+  align-items: center;
   grid-column-gap: 5px;
+  margin-bottom: 5px;
 }
 .grid-col-1 {
   grid-column: 1;
