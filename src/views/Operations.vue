@@ -72,7 +72,7 @@ export default {
           a.name > b.name ? 1 : b.name > a.name ? -1 : 0
         )
       } catch (error) {
-        this.$message.error(`Error loading environments list: ${error.message}`)
+        this.$message.error(`Error loading symphonies list: ${error.message}`)
       }
     },
     async loadManualTriggers() {
@@ -167,7 +167,7 @@ export default {
         this.mainSwitchSoundsEnabled = false
         this.$message.success('Ambient sounds muted.')
         // Reset button text
-        this.mainSwitchText = 'Enable Ambient Sounds'
+        this.mainSwitchText = 'Start Ambient Sounds'
       } else {
         // Enable Ambient Sounds
         this.mainSwitchSoundsEnabled = true
@@ -175,7 +175,7 @@ export default {
         await this.startOrchestrations()
         this.$message.success('Ambient sounds enabled.')
         // Reset button text
-        this.mainSwitchText = 'Mute Ambient Sounds'
+        this.mainSwitchText = 'Stop Ambient Sounds'
       }
     },
     async getMainSwitchState() {

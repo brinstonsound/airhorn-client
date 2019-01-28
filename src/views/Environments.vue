@@ -198,13 +198,7 @@ export default {
         </el-button>
       </div>
     </div>
-    <!-- <h4>{{activeSymphony.name}}</h4> -->
     <div id="symphony-components-container">
-      <!-- <div id="triggers" class="flex-container">
-        <div class="form-container" v-for="trigger in lstTriggers" :key="trigger.id">
-          <Trigger :triggerId="trigger.id"></Trigger>
-        </div>
-      </div>-->
       <div id="orchestrations" class="flex-container">
         <div
           class="form-container"

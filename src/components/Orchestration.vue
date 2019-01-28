@@ -37,6 +37,13 @@ export default {
       }
       this.editMode = true
     },
+    addAction() {
+      const newAction = {
+        id: '0',
+        type: ''
+      }
+      this.orchestration.actions.push(newAction)
+    },
     async save() {
       // Validate changes
       if (
@@ -220,14 +227,10 @@ export default {
 </script>
 
 <template>
-  <div class="card" v-loading="loading">
+  <div ref="card" class="card" v-loading="loading">
     <div class="card-header">
-      <span v-if="editMode == false" class="card-title">{{orchestration.name}}</span>
-      <div v-if="editMode == true" style="float: left; padding: 4px 4px; margin-right: 3px">
-        <b>Name:</b>
-        <input type="text" v-model="orchestration.name">
-      </div>
-      <el-tooltip v-if="editMode == false" content="Test this orchestration" placement="bottom">
+      <span class="card-title">{{orchestration.name}}</span>
+      <el-tooltip content="Test this orchestration" placement="bottom">
         <el-button
           style="float: right; padding: 4px 4px; margin-right: 3px"
           icon="el-icon-caret-right"
@@ -235,7 +238,7 @@ export default {
           @click="executeOrchestration(orchestration.id)"
         ></el-button>
       </el-tooltip>
-      <el-tooltip v-if="editMode == false" content="Edit this orchestration" placement="bottom">
+      <el-tooltip content="Edit this orchestration" placement="bottom">
         <el-button
           style="float: right; padding: 4px 4px; margin-right: 10px"
           icon="el-icon-edit"
@@ -243,31 +246,7 @@ export default {
           @click="startEdit()"
         ></el-button>
       </el-tooltip>
-      <el-tooltip
-        v-if="editMode == true"
-        content="Save changes to this orchestration"
-        placement="bottom"
-      >
-        <el-button
-          style="float: right; padding: 4px 4px; margin-right: 10px"
-          icon="el-icon-circle-check-outline"
-          circle
-          @click="save()"
-        ></el-button>
-      </el-tooltip>
-      <el-tooltip
-        v-if="editMode == true"
-        content="Cancel changes to this orchestration"
-        placement="bottom"
-      >
-        <el-button
-          style="float: right; padding: 4px 4px; margin-right: 10px"
-          icon="el-icon-circle-close-outline"
-          circle
-          @click="cancelEdit()"
-        ></el-button>
-      </el-tooltip>
-      <el-tooltip v-if="editMode == true" content="Delete this orchestration" placement="bottom">
+      <el-tooltip content="Delete this orchestration" placement="bottom">
         <el-button
           style="float: right; padding: 4px 4px; margin-right: 10px"
           icon="el-icon-delete"
@@ -287,13 +266,12 @@ export default {
               >An orchestration with Auto Start set to true will automatically execute as soon as the Airhorn server is powered up.</span>
             </div>
             <b>Auto Start:&nbsp;</b>
-            <span v-if="editMode == false">{{orchestration.autoStart ? 'Yes' : 'No'}}&nbsp;</span>
-            <el-checkbox v-if="editMode == true" v-model="orchestration.autoStart"></el-checkbox>
+            <span>{{orchestration.autoStart ? 'Yes' : 'No'}}&nbsp;</span>
           </span>
         </div>
       </div>
       <div id="startDelay">
-        <div v-if="editMode == false">
+        <div>
           <div class="tooltip">
             <i class="el-icon-question"></i>
             <span
@@ -306,30 +284,6 @@ export default {
           >{{orchestration.startDelayMin}} (secs.)</span>
           <span v-else>{{orchestration.startDelayMin}}-{{orchestration.startDelayMax}} (secs.)</span>
         </div>
-        <div v-if="editMode == true" class>
-          <div class="grid-box">
-            <div class="grid-col-1">Start Delay (Min.):</div>
-            <div class="grid-col-2">
-              <el-input-number
-                v-model="orchestration.startDelayMin"
-                @change="handleStartDelayMin()"
-                :min="0"
-                :max="3600"
-                size="mini"
-              ></el-input-number>(secs.)
-            </div>
-            <div class="grid-col-1">Start Delay (Max.):</div>
-            <div class="grid-col-2">
-              <el-input-number
-                v-model="orchestration.startDelayMax"
-                @change="handleStartDelayMax()"
-                :min="0"
-                :max="3600"
-                size="mini"
-              ></el-input-number>(secs.)
-            </div>
-          </div>
-        </div>
       </div>
       <div id="triggers">
         <div class="tooltip">
@@ -339,14 +293,67 @@ export default {
           >An orchestration can be triggered manually or by a switch on the layout.</span>
         </div>
         <span style="font-weight:bolder">Triggers:</span>
-        <div v-if="editMode == false">
+        <div>
           <div class="grid-box" v-for="t in orchestration.triggers" :key="t">
             <div class="grid-col-1">
               <Trigger :triggerId="t"></Trigger>
             </div>
           </div>
         </div>
-        <div v-if="editMode == true">
+      </div>
+      <div id="actions">
+        <span style="font-weight:bolder">Actions:</span>
+
+        <div class="grid-box" v-for="action in orchestration.actions" :key="action.id">
+          <div class="grid-col-1">
+            <Action :actionId="action.id"></Action>
+          </div>
+        </div>
+      </div>
+    </div>
+    <el-dialog :visible.sync="editMode" :close-on-click-modal="false" width="40%">
+      <div slot="title" class="dialog-titlebar">Add/Edit An Orchestration</div>
+      <el-row>
+        <el-col :span="8">Name:</el-col>
+        <el-col :span="16">
+          <el-input v-model="orchestration.name" size="small"></el-input>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="8">Auto Start:</el-col>
+        <el-col :span="16">
+          <el-checkbox v-model="orchestration.autoStart"></el-checkbox>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="8">Min Start Delay (secs):</el-col>
+        <el-col :span="16">
+          <el-slider
+            v-model="orchestration.startDelayMin"
+            show-input
+            :min="0"
+            :max="360"
+            :step=".5"
+            @change="handleStartDelayMin()"
+          ></el-slider>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="8">Max Start Delay (secs):</el-col>
+        <el-col :span="16">
+          <el-slider
+            v-model="orchestration.startDelayMax"
+            show-input
+            :min="0"
+            :max="360"
+            :step=".5"
+            @change="handleStartDelayMax()"
+          ></el-slider>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="8">Triggers:</el-col>
+        <el-col :span="16">
           <el-select
             v-model="orchestration.triggers"
             multiple
@@ -369,40 +376,23 @@ export default {
               ></el-option>
             </el-option-group>
           </el-select>
-        </div>
-      </div>
-      <div id="actions">
+        </el-col>
+      </el-row>
+      <div>
         <div class="tooltip">
           <i class="el-icon-question"></i>
-          <span class="tooltiptext">Actions are what an orchestration "does" when it is executed.
-            <br>All actions are executed at the same time.
-          </span>
-        </div>
-        <span style="font-weight:bolder">Actions:</span>
-
-        <div class="grid-box" v-for="action in orchestration.actions" :key="action.id">
-          <div class="grid-col-1">
-            <Action :actionId="action.id"></Action>
-          </div>
-        </div>
-        <el-button v-if="editMode == true" type="success" size="mini" @click="editActionDialogVisible = true">Add Action</el-button>
+          <span
+            class="tooltiptext"
+          >Actions are what an orchestration "does" when it is executed. All actions are executed at the same time.</span>
+        </div>Actions:
       </div>
-    </div>
-    <el-dialog title="Add An Action" :visible.sync="editActionDialogVisible" width="40%">
-      <!-- <div class="upload-form-container">
-        <div class="flex-item form-label">Name:</div>
-        <div class="flex-item form-field">
-          <input type="text" v-model="categoryForm.name" class="form-field">
-        </div>
-      </div> -->
+      <div v-for="action in orchestration.actions" :key="action.id">
+        <Action :actionId="action.id" :editMode="editMode"></Action>
+      </div>
+      <!-- <el-button type="success" size="small" @click="addAction()">Add an Action</el-button> -->
       <span slot="footer" class="dialog-footer">
-        <el-button size="small" @click="addActionDialogVisible = false">Cancel</el-button>
-        <el-button
-          style="margin-left: 10px;"
-          size="small"
-          type="success"
-          @click="submitNewAction()"
-        >Save</el-button>
+        <el-button size="small" @click="editMode = false">Cancel</el-button>
+        <el-button style="margin-left: 10px;" size="small" type="success" @click="save()">Save</el-button>
       </span>
     </el-dialog>
   </div>
@@ -437,12 +427,24 @@ export default {
   align-items: start;
   margin: 10px;
 }
-
-.popup-text {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  font-size: 0.9em;
+.dialog-titlebar {
+  background-color: #05668d;
+  color: white;
+  /* height: 30px; */
+  padding: 5px;
+  font-size: 1.2em;
+  font-weight: bold;
 }
-
+.edit-grid-box {
+  display: grid;
+  grid-template-columns: 33% 66%;
+  align-items: center;
+  justify-items: start;
+  grid-gap: 5px;
+}
+.el-row {
+  margin-bottom: 10px;
+}
 #autoStart {
   grid-column: 1;
   grid-row: 1;
@@ -461,8 +463,9 @@ export default {
 }
 .grid-box {
   display: grid;
-  align-items: start;
-  grid-column-gap: 5px;
+  align-items: center;
+  justify-items: start;
+  grid-gap: 5px;
 }
 .grid-col-1 {
   grid-column: 1;
