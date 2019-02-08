@@ -39,8 +39,14 @@ export default {
     },
     addAction() {
       const newAction = {
-        id: '0',
-        type: ''
+        id: 0,
+        type: 'SOUND',
+        sound: {
+          id: 0,
+          speakers: [],
+          volume: 0
+        },
+        orchestrationId: this.orchestration.orchestrationId,
       }
       this.orchestration.actions.push(newAction)
     },
@@ -91,7 +97,10 @@ export default {
           this.$message.error(`Error creating orchestration!! ${resp.data}`)
         }
       }
-      this.$emit('updated', this.orchestration.id) // Notify the parent needs to refresh.
+      this.orchestration.actions = []
+      this.orchestration = await this.getOrchestration()
+
+      //this.$emit('updated', this.orchestration.id) // Notify the parent needs to refresh.
 
       // Update the display object
       this.editMode = false
@@ -311,7 +320,9 @@ export default {
         </div>
       </div>
     </div>
-    <el-dialog :visible.sync="editMode" :close-on-click-modal="false" width="40%">
+
+    <!-- EDIT DIALOGUE -->
+    <el-dialog :visible.sync="editMode" :close-on-click-modal="false" width="33%">
       <div slot="title" class="dialog-titlebar">Add/Edit An Orchestration</div>
       <el-row>
         <el-col :span="8">Name:</el-col>
@@ -333,7 +344,7 @@ export default {
             show-input
             :min="0"
             :max="360"
-            :step=".5"
+            :step="1"
             @change="handleStartDelayMin()"
           ></el-slider>
         </el-col>
@@ -346,7 +357,7 @@ export default {
             show-input
             :min="0"
             :max="360"
-            :step=".5"
+            :step="1"
             @change="handleStartDelayMax()"
           ></el-slider>
         </el-col>
@@ -387,9 +398,14 @@ export default {
         </div>Actions:
       </div>
       <div v-for="action in orchestration.actions" :key="action.id">
-        <Action :actionId="action.id" :editMode="editMode"></Action>
+        <Action
+          :actionId="action.id"
+          :orchestrationId="orchestration.orchestrationId"
+          :symphonyId="orchestration.symphonyId"
+          :editMode="true"
+        ></Action>
       </div>
-      <!-- <el-button type="success" size="small" @click="addAction()">Add an Action</el-button> -->
+      <el-button type="success" size="small" @click="addAction()">Add an Action</el-button>
       <span slot="footer" class="dialog-footer">
         <el-button size="small" @click="editMode = false">Cancel</el-button>
         <el-button style="margin-left: 10px;" size="small" type="success" @click="save()">Save</el-button>
@@ -405,7 +421,7 @@ export default {
   border-width: 2px;
   border-radius: 3px;
   border-color: #05668d;
-  background-color: #fdd9b5;
+  background-color: #cfd7e7;
 }
 .card-header {
   height: 30px;
