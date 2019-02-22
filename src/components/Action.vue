@@ -124,24 +124,26 @@ export default {
         this.action.orchestrationId = this.orchestrationId
       }
     },
-    async save() {
+    save() {
+      alert(JSON.stringify(this.action))
       try {
-        if (this.action.id) {
+        if (this.action.id > 0) {
           axios.put(
             `${settings.orchestrationAPI}/actions/${this.action.id}`,
             this.action
           )
         } else {
-          axios.post(
-            `${settings.orchestrationAPI}/actions/${this.action.id}`,
-            this.action
-          )
+          axios.post(`${settings.orchestrationAPI}/actions`, this.action)
         }
       } catch (error) {
         this.$message.error(
           `Error saving orchestrations action: ${error.message}`
         )
       }
+    },
+    async deleteThisAction() {
+      axios.delete(`${settings.orchestrationAPI}/actions/${this.actionId}`)
+      this.$emit('actionDeleted', this.action.id) // Notify the parent needs to refresh. 
     },
   },
   // async created() {
@@ -226,6 +228,7 @@ export default {
           </el-col>
         </el-row>
       </div>
+      <el-button size="mini" @click="deleteThisAction()">Delete</el-button>
     </div>
     <div v-else>
       <!-- DISPLAY -->

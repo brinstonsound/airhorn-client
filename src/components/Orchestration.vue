@@ -37,17 +37,23 @@ export default {
       }
       this.editMode = true
     },
-    addAction() {
+    async addAction() {
       const newAction = {
         id: 0,
         type: 'SOUND',
+        orchestrationId: this.orchestration.id,
+        nextOrchestrationId: 0,
         sound: {
-          id: 0,
+          soundId: 0,
           speakers: [],
-          volume: 0
+          volume: 0,
         },
-        orchestrationId: this.orchestration.orchestrationId,
       }
+      const resp = await axios.post(
+        `${settings.orchestrationAPI}/actions`,
+        newAction
+      )
+      newAction.id = resp.data.id
       this.orchestration.actions.push(newAction)
     },
     async save() {
@@ -220,6 +226,10 @@ export default {
   async created() {
     await this.loadTriggers()
     await this.loadTriggersBulk()
+    this.$on('actionDeleted', actionId => {
+      // Find this action and pop it out of our actions array
+      alert('Need to pop this action out of our array!')
+    })
     if (this.orchestrationId) {
       // Get the orchestration object
       this.orchestration = await this.getOrchestration()
