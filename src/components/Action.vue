@@ -4,8 +4,8 @@ import axios from 'axios'
 export default {
   name: 'action',
   props: {
-    actionId: {
-      type: Number,
+    action: {
+      type: Object,
     },
     orchestrationId: {
       type: Number,
@@ -19,11 +19,12 @@ export default {
   },
   data() {
     return {
-      action: {},
+      //action: {},
       sound: {},
-      nextOrchestration: {},
       lstOrchestrations: [],
       lstSounds: [],
+      soundName: '',
+      nextOrchestrationName: '',
     }
   },
   computed: {
@@ -95,35 +96,35 @@ export default {
         this.$message.error(`Error loading sound list: ${error.message}`)
       }
     },
-    async loadThisAction() {
-      if (this.actionId > 0) {
-        // Load this action
-        try {
-          const actionResp = await axios.get(
-            `${settings.orchestrationAPI}/actions/${this.actionId}`
-          )
-          this.action = actionResp.data
-          if (this.action.type == 'SOUND') {
-            const soundResp = await axios.get(
-              `${settings.orchestrationAPI}/sounds/${this.action.sound.soundId}`
-            )
-            this.sound = soundResp.data
-          }
-          if (this.action.type == 'ORCHESTRATION') {
-            const orchResp = await axios.get(
-              `${settings.orchestrationAPI}/orchestrations/${
-                this.action.nextOrchestrationId
-              }`
-            )
-            this.nextOrchestration = orchResp.data
-          }
-        } catch (e) {
-          this.$message.error(`Error loading action: ${e.message}`)
-        }
-      } else {
-        this.action.orchestrationId = this.orchestrationId
-      }
-    },
+    // async loadThisAction() {
+    //   if (this.actionId > 0) {
+    //     // Load this action
+    //     try {
+    //       const actionResp = await axios.get(
+    //         `${settings.orchestrationAPI}/actions/${this.actionId}`
+    //       )
+    //       this.action = actionResp.data
+    //       if (this.action.type == 'SOUND') {
+    //         const soundResp = await axios.get(
+    //           `${settings.orchestrationAPI}/sounds/${this.action.sound.soundId}`
+    //         )
+    //         this.sound = soundResp.data
+    //       }
+    //       if (this.action.type == 'ORCHESTRATION') {
+    //         const orchResp = await axios.get(
+    //           `${settings.orchestrationAPI}/orchestrations/${
+    //             this.action.nextOrchestrationId
+    //           }`
+    //         )
+    //         this.nextOrchestration = orchResp.data
+    //       }
+    //     } catch (e) {
+    //       this.$message.error(`Error loading action: ${e.message}`)
+    //     }
+    //   } else {
+    //     this.action.orchestrationId = this.orchestrationId
+    //   }
+    // },
     save() {
       alert(JSON.stringify(this.action))
       try {
@@ -143,18 +144,31 @@ export default {
     },
     async deleteThisAction() {
       axios.delete(`${settings.orchestrationAPI}/actions/${this.actionId}`)
-      this.$emit('actionDeleted', this.action.id) // Notify the parent needs to refresh. 
+      this.$emit('actionDeleted', this.action.id) // Notify the parent needs to refresh.
     },
   },
-  // async created() {
-  //   this.$parent.$on('updated', await this.loadThisAction())
-  // },
   async beforeMount() {
-    await this.loadThisAction()
+    //await this.loadThisAction()
     if (this.editMode) {
       this.loadOrchestrations()
       this.loadSounds()
     }
+    alert(JSON.stringify(this.action))
+      if (this.action.nextOrchestrationId != undefined) {
+        const resp = axios.get(
+          `${settings.orchestrationAPI}/orchestrations/${
+            this.action.nextOrchestrationId
+          }`
+        )
+        this.nextOrchestrationName = resp.name
+      }
+      if (this.action.sound != undefined) {
+        const resp = await axios.get(
+          `${settings.orchestrationAPI}/sounds/${this.action.sound.soundId}`
+        )
+        this.soundName = resp.name
+      }
+    
   },
 }
 </script>
@@ -231,18 +245,19 @@ export default {
       <el-button size="mini" @click="deleteThisAction()">Delete</el-button>
     </div>
     <div v-else>
+      {{JSON.stringify(action)}}
       <!-- DISPLAY -->
       <div class="grid-box" v-if="action.type == 'SOUND'">
         <div style="grid-column: 1 / 4; font-weight: bolder;">PLAY:</div>
-        <div style="grid-column: 2 / 4; font-weight: bolder;">{{sound.name}}</div>
+        <div style="grid-column: 2 / 4; font-weight: bolder;">{{soundName}}</div>
         <div style="grid-column: 2 / 3;">Volume:</div>
-        <div style="grid-column: 3 / 4 ;">{{action.sound.volume * 100}}</div>
+        <div style="grid-column: 3 / 4 ;">{{action.sound.volume}}</div>
         <div style="grid-column: 2 / 3;">Speakers:</div>
         <div style="grid-column: 3 / 4;">{{JSON.stringify(action.sound.speakers)}}</div>
       </div>
       <div class="grid-box" v-if="action.type == 'ORCHESTRATION'">
         <div style="grid-column: 1 / 4; font-weight: bolder;">LINK TO:</div>
-        <div style="grid-column: 2 / 4; font-weight: bolder;">{{nextOrchestration.name}}</div>
+        <div style="grid-column: 2 / 4; font-weight: bolder;">{{nextOrchestrationName}}</div>
       </div>
     </div>
   </div>

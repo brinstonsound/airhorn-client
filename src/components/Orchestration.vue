@@ -325,7 +325,7 @@ export default {
 
         <div class="grid-box" v-for="action in orchestration.actions" :key="action.id">
           <div class="grid-col-1">
-            <Action :actionId="action.id"></Action>
+            <Action :action="action"></Action>
           </div>
         </div>
       </div>
@@ -409,7 +409,7 @@ export default {
       </div>
       <div v-for="action in orchestration.actions" :key="action.id">
         <Action
-          :actionId="action.id"
+          :action="action"
           :orchestrationId="orchestration.orchestrationId"
           :symphonyId="orchestration.symphonyId"
           :editMode="true"
