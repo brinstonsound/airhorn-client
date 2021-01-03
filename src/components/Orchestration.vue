@@ -228,7 +228,7 @@ export default {
     await this.loadTriggersBulk()
     this.$on('actionDeleted', actionId => {
       // Find this action and pop it out of our actions array
-      alert('Need to pop this action out of our array!')
+      alert(`Need to pop this action ${actionId} out of our array!`)
     })
     if (this.orchestrationId) {
       // Get the orchestration object
